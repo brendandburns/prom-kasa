@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prom-kasa
+  labels:
+    app: prom-kasa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prom-kasa
+  template:
+    metadata:
+      labels:
+        app: prom-kasa
+      annotations:
+        prometheus.io/scrape: "true"
+    spec:
+      containers:
+      - name: prom-kasa
+        image: brendanburns/prom-kasa:v1
+        command:
+        - python3
+        - /prom_kasa.py
+        resources:
+          limits:
+           cpu: 200m
+           memory: 500Mi
+        volumeMounts:
+        - name: tz-seattle
+          mountPath: /etc/localtime
+      volumes:
+      - name: tz-seattle
+        hostPath:
+          path: /usr/share/zoneinfo/US/Pacific
