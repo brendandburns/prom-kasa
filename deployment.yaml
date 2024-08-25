@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: prom-kasa
-        image: burns.azurecr.io/prom-kasa:v3
+        image: burns.azurecr.io/prom-kasa:v4
         command:
         - python3
         - /prom_kasa.py
