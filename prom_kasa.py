@@ -1,7 +1,7 @@
 import kasa
-from prometheus_client import start_http_server, Gauge
+from prometheus_client import Gauge
+from prometheus_async.aio.web import start_http_server
 import asyncio
-import time
 
 WATTS = Gauge('power_strip_milliwatts', 'Current power reading in milli-watts', ['plug'])
 VOLTS = Gauge('power_strip_millivolts', 'Observed voltage in milli-volts')
@@ -21,10 +21,14 @@ async def do_update(strip):
         volts += val['voltage_mv']
     volts /= len(strip.children)
     VOLTS.set(volts)
-    time.sleep(60)
+    await asyncio.sleep(60)
+
+async def main():
+    strip = kasa.SmartStrip('192.168.2.14')
+    server = asyncio.create_task(start_http_server(port=8000))
+    while True:
+        await do_update(strip)
+    await server
 
 if __name__ == '__main__':
-    strip = kasa.SmartStrip('192.168.2.14')
-    start_http_server(8000)
-    while True:
-        asyncio.run(do_update(strip))
+    asyncio.run(main())
