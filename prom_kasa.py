@@ -1,4 +1,5 @@
 import kasa
+from kasa.exceptions import KasaException
 from prometheus_client import Gauge
 from prometheus_async.aio.web import start_http_server
 import asyncio
@@ -11,16 +12,21 @@ def return_true(self):
     return True
 
 async def do_update(strip):
-    await strip.update()
-    volts = 0
-    for child in strip.children:
-        child._SmartStripPlug__has_emeter = True
-        val = await child.get_emeter_realtime()
-        WATTS.labels(child.alias).set(val['power_mw'])
-        AMPS.labels(child.alias).set(val['current_ma'])
-        volts += val['voltage_mv']
-    volts /= len(strip.children)
-    VOLTS.set(volts)
+    try:
+        await strip.update()
+        volts = 0
+        for child in strip.children:
+            child._SmartStripPlug__has_emeter = True
+            val = await child.get_emeter_realtime()
+            WATTS.labels(child.alias).set(val['power_mw'])
+            AMPS.labels(child.alias).set(val['current_ma'])
+            volts += val['voltage_mv']
+            volts /= len(strip.children)
+            VOLTS.set(volts)
+
+    except KasaException as e:
+        print(e)
+
     await asyncio.sleep(60)
 
 async def main():
